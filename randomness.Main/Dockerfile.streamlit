@@ -1,0 +1,16 @@
+# --- Streamlit Visualization ---
+
+# Python base image
+FROM python:3.9 AS streamlit
+WORKDIR /app
+
+# Install dependencies
+COPY requirements.txt requirements.txt
+RUN pip install -r requirements.txt
+
+# Copy Streamlit app
+COPY streamlit_app.py streamlit_app.py
+EXPOSE 8080
+
+# Run Streamlit continuously as a visualization service
+CMD ["streamlit", "run", "streamlit_app.py", "--server.port=8080", "--server.enableCORS=false"]

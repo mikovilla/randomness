@@ -1,0 +1,82 @@
+---
+# Source: randomness/templates/pvc.yaml
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: results-pvc
+spec:
+  accessModes:
+    - ReadWriteMany
+  resources:
+    requests:
+      storage: 1Gi
+---
+# Source: randomness/templates/service.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: streamlit-service
+spec:
+  type: NodePort
+  selector:
+    app: streamlit-app
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 8080
+---
+# Source: randomness/templates/deployment.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: streamlit-app
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: streamlit-app
+  template:
+    metadata:
+      labels:
+        app: streamlit-app
+    spec:
+      containers:
+        - name: streamlit-container
+          image: "streamlit-visualization:latest"
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 8080
+          volumeMounts:
+            - name: results-storage
+              mountPath: /data
+      volumes:
+        - name: results-storage
+          persistentVolumeClaim:
+            claimName: results-pvc
+---
+# Source: randomness/templates/job.yaml
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: dotnet-benchmark-job
+spec:
+  backoffLimit: 0
+  template:
+    metadata:
+      labels:
+        app: dotnet-benchmark-job
+    spec:
+      restartPolicy: Never
+      containers:
+        - name: dotnet-benchmark
+          image: "randomness-app:latest"
+          imagePullPolicy: IfNotPresent
+          # 10 runs, 100000 size, 2 random intensity
+          command: ["/bin/sh", "-c", "dotnet /app/randomness.Main.dll 10 100000 2 && tail -f /dev/null"]
+          volumeMounts:
+            - name: results-storage
+              mountPath: /data
+      volumes:
+        - name: results-storage
+          persistentVolumeClaim:
+            claimName: results-pvc

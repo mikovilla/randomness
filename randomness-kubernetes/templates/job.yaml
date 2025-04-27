@@ -1,0 +1,25 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: {{ .Values.dotnet.name }}
+spec:
+  backoffLimit: 0
+  template:
+    metadata:
+      labels:
+        app: {{ .Values.dotnet.name }}
+    spec:
+      restartPolicy: Never
+      containers:
+        - name: dotnet-benchmark
+          image: "{{ .Values.dotnet.image.repository }}:{{ .Values.dotnet.image.tag }}"
+          imagePullPolicy: {{ .Values.dotnet.image.pullPolicy }}
+          # 10 runs, 100000 size, 2 random intensity
+          command: ["/bin/sh", "-c", "dotnet /app/randomness.Main.dll 10 100000 2 && tail -f /dev/null"]
+          volumeMounts:
+            - name: results-storage
+              mountPath: /data
+      volumes:
+        - name: results-storage
+          persistentVolumeClaim:
+            claimName: results-pvc

@@ -1,0 +1,5 @@
+apiVersion: v2
+name: randomness
+description: Helm chart for deploying The Randomness Factor
+version: 0.1.0
+appVersion: 1.0.0

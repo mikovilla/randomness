@@ -1,0 +1,16 @@
+replicaCount: 2
+
+dotnet:
+  name: dotnet-benchmark-job
+  image:
+    repository: randomness-app
+    tag: latest
+    pullPolicy: IfNotPresent
+
+streamlit:
+  name: streamlit-app
+  serviceName: streamlit-service
+  image:
+    repository: streamlit-visualization
+    tag: latest
+    pullPolicy: IfNotPresent
